@@ -21,6 +21,10 @@ const courses = {};
 
 /* GET courses listing. */
 router.get('/', function(request, response, next) {
+    if (!courses || Object.keys(courses).length === 0) {
+        return response.status(404).json({ message: "No courses found" });
+    }
+
     response.statusCode = 200;
     response.statusText = 'OK';
     response.json(Object.values(courses));
@@ -30,6 +34,10 @@ router.get('/', function(request, response, next) {
 /* GET courses listing with filtering. */
 router.get('/filter', (request, response) => {
     const { lecturer, hours, name } = request.query;
+
+    if (!courses || Object.keys(courses).length === 0) {
+        return response.status(404).json({ message: "No courses found" });
+    }
 
     const filteredCourses = Object.values(courses).filter(c =>
         (!lecturer || c.lecturer.toLowerCase() === lecturer.toLowerCase()) &&
