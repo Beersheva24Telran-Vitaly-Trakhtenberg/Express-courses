@@ -52,4 +52,19 @@ router.delete('/:id', (request, response) => {
     response.send();
 });
 
+router.put('/:id', (request, response) => {
+    const id = request.params.id;
+    if (courses[id]) {
+        courses[id] = {...courses[id], ...request.body};
+        response.status(200).json({
+            success: true,
+            message: 'The course was updated',
+            updatedCourse: courses[id]
+        });
+    } else {
+        response.status(404).json({ message: 'Course [' + id + '] not found' });
+    }
+    response.send();
+});
+
 module.exports = router;
