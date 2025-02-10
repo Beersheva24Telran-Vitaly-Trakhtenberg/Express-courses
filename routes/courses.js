@@ -23,8 +23,21 @@ const courses = {};
 router.get('/', function(request, response, next) {
     response.statusCode = 200;
     response.statusText = 'OK';
-    response.json(courses);
-    response.send();
+    response.json(Object.values(courses));
+    // response.send(); // to prevent error after response.json() = "Cannot set headers after they are sent to the client".
+});
+
+/* GET courses listing with filtering. */
+router.get('/filter', (request, response) => {
+    const { lecturer, hours, name } = request.query;
+
+    const filteredCourses = Object.values(courses).filter(c =>
+        (!lecturer || c.lecturer.toLowerCase() === lecturer.toLowerCase()) &&
+        (!hours || c.hours === parseInt(hours)) &&
+        (!name || c.name.toLowerCase().includes(name.toLowerCase()))
+    );
+
+    response.json(filteredCourses);
 });
 
 router.post('/', (request, response) => {
@@ -49,7 +62,6 @@ router.delete('/:id', (request, response) => {
     } else {
         response.status(404).json({ message: 'Course [' + id + '] not found' });
     }
-    response.send();
 });
 
 router.put('/:id', (request, response) => {
@@ -64,7 +76,6 @@ router.put('/:id', (request, response) => {
     } else {
         response.status(404).json({ message: 'Course [' + id + '] not found' });
     }
-    response.send();
 });
 
 module.exports = router;
