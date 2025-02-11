@@ -1,23 +1,36 @@
-/*
-router.post('/api/v1/courses', (request, response) => {
-    courses.id = request.body.id;
-    response.statusCode = 200;
-    response.statusText = 'OK';
-    response.statusMessage = 'The course was created';
-    response.send();
-});
-
-router.get('/api/v1/courses', (request, response) => {
-    const id = request.body.id;
-    courses[id] = request.body;
-    console.log(courses);
-    response.status(201).send(courses[id]);
-});
-*/
 var express = require('express');
 var router = express.Router();
 
 const courses = {};
+
+const lecturers = ["Vasya", "Olya", "Vova", "Yuri", "Eduard", "Irina"];
+const courseNames = ["Front-End", "JAVA", "Back-End", "Node", "AWS", "C++"];
+const hoursMin = 100;
+const hoursMax = 600;
+const idPattern = /^J\d{3}$/;
+const lectureFormat = ["online", "offline", "hybrid"];
+const Joi = require('joi');
+const schemaCoursePost = Joi.object({
+    id: Joi.string()
+        .alphanum()
+        .pattern(idPattern)
+        .required(),
+    name: Joi.any()
+        .valid(...courseNames)
+        .required(),
+    lecturer: Joi.any().valid(...lecturers).required(),
+    hours: Joi.number().integer().min(hoursMin).max(hoursMax).required(),
+    format: Joi.any().valid(...lectureFormat).required(),
+});
+const schemaCoursePut = Joi.object({
+    id: Joi.string()
+        .alphanum()
+        .pattern(idPattern),
+    name: Joi.any().valid(...courseNames),
+    lecturer: Joi.any().valid(...lecturers),
+    hours: Joi.number().integer().min(hoursMin).max(hoursMax),
+    format: Joi.any().valid(...lectureFormat),
+});
 
 /* GET courses listing. */
 router.get('/', function(request, response, next) {
@@ -28,7 +41,6 @@ router.get('/', function(request, response, next) {
     response.statusCode = 200;
     response.statusText = 'OK';
     response.json(Object.values(courses));
-    // response.send(); // to prevent error after response.json() = "Cannot set headers after they are sent to the client".
 });
 
 /* GET courses listing with filtering. */
@@ -50,6 +62,10 @@ router.get('/filter', (request, response) => {
 
 router.post('/', (request, response) => {
     const id = request.body.id;
+    const { error } = schemaCoursePost.validate(request.body);
+    if (error) {
+        return response.status(400).json({ error: error.details[0].message });
+    }
     courses[id] = request.body;
     response.statusCode = 200;
     response.statusText = 'OK';
@@ -75,6 +91,10 @@ router.delete('/:id', (request, response) => {
 router.put('/:id', (request, response) => {
     const id = request.params.id;
     if (courses[id]) {
+        const { error } = schemaCoursePut.validate(request.body);
+        if (error) {
+            return response.status(400).json({ error: error.details[0].message });
+        }
         courses[id] = {...courses[id], ...request.body};
         response.status(200).json({
             success: true,
